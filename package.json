@@ -1,10 +1,10 @@
 {
   "name": "@crafter/onpe-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Agent-first CLI for ONPE election data",
   "type": "module",
   "bin": {
-    "onpe": "./dist/cli.js"
+    "onpe-cli": "./dist/cli.js"
   },
   "scripts": {
     "dev": "bun run src/cli.ts",

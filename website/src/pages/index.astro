@@ -24,22 +24,22 @@ const features = [
 	{
 		title: "Mesa Lookup",
 		desc: "Query any mesa by code. Works with regular (000001-088064) and rural centros poblados (900001-904703).",
-		code: "$ onpe mesa 044739\nMesa 044739\n  Local:  IE MIGUEL GRAU SEMINARIO\n  Habiles: 300  Emitidos: 237\n  Estado: Contabilizada (C)",
+		code: "$ onpe-cli mesa 044739\nMesa 044739\n  Local:  IE MIGUEL GRAU SEMINARIO\n  Habiles: 300  Emitidos: 237\n  Estado: Contabilizada (C)",
 	},
 	{
 		title: "Acta Detail",
 		desc: "Full vote breakdown per party with percentages. Includes file IDs for PDF download.",
-		code: "$ onpe acta 12345 --json | jq .detalle\n# Returns all party votes, candidates,\n# percentages, and acta file references",
+		code: "$ onpe-cli acta 12345 --json | jq .detalle\n# Returns all party votes, candidates,\n# percentages, and acta file references",
 	},
 	{
 		title: "Ubigeo Navigation",
 		desc: "Drill down departments, provinces, and districts. 3 levels matching ONPE's geographic hierarchy.",
-		code: "$ onpe ubigeos 1\n010000  AMAZONAS\n020000  ANCASH\n030000  APURIMAC\n...",
+		code: "$ onpe-cli ubigeos 1\n010000  AMAZONAS\n020000  ANCASH\n030000  APURIMAC\n...",
 	},
 	{
 		title: "Election Summary",
 		desc: "Real-time totals: actas counted, participation rate, JEE pipeline status.",
-		code: "$ onpe resumen\nActas contabilizadas: 86664 (93.6%)\nTotal actas:         92767\nParticipacion:       79.2%",
+		code: "$ onpe-cli resumen\nActas contabilizadas: 86664 (93.6%)\nTotal actas:         92767\nParticipacion:       79.2%",
 	},
 ];
 
@@ -47,26 +47,24 @@ const featureHtmls = await Promise.all(
 	features.map(f => codeToHtml(f.code, { lang: "bash", theme: onpeTheme }))
 );
 
-const heroCode = `# Install globally
+const heroCode = `# Install from npm
 $ bun add -g @crafter/onpe-cli
 
-# Check API status
-$ onpe doctor
-  [OK] proceso-activo: EG2026
-  [OK] elecciones: 9 elecciones
-  [OK] resumen-general: 86664 actas
-  [OK] buscar-mesa: mesa 000001 accesible
-All checks passed
+# Health check (4 endpoints)
+$ onpe-cli doctor
+[OK]   proceso-activo: EG2026
+[OK]   elecciones: 9 elecciones
+[OK]   resumen-general: 86817 actas (93.6%)
+[OK]   buscar-mesa: mesa 000001 accesible
+4/4 checks passed
 
-# Look up any mesa
-$ onpe mesa 900001 --json
-# NDJSON output for agents
+# Agent mode: pipe for NDJSON
+$ onpe-cli mesa 900001 --json | jq .codigoMesa
 
 # Drill down geography
-$ onpe ubigeos 2 150000
+$ onpe-cli ubigeos 2 150000
 150101  LIMA
-150102  ANCON
-...`;
+150102  ANCON`;
 
 const heroCodeHtml = await codeToHtml(heroCode, { lang: "bash", theme: onpeTheme });
 
@@ -74,16 +72,16 @@ const principles = [
 	"--json auto-detected when piped",
 	"NDJSON for streaming agent consumption",
 	"next-steps hints on stderr",
-	"Typed error codes with recovery hints",
-	"Sec-Fetch headers bypass nginx filter",
-	"Zero auth required (public API)",
+	"Typed errors with fromHttp() + recovery hints",
+	"Zero-dep argv parser (no commander needed)",
+	"doctor block for health checks",
 ];
 
 const stats = [
 	{ value: "92K+", label: "Mesas" },
 	{ value: "6", label: "Commands" },
 	{ value: "0", label: "Auth required" },
-	{ value: "4", label: "Cligentic blocks" },
+	{ value: "6", label: "Cligentic blocks" },
 ];
 ---
 
@@ -312,9 +310,9 @@ const stats = [
 				<p class="section-label mono">Design philosophy</p>
 				<h2 class="section-title">Agent DX first</h2>
 				<p class="agent-dx-desc">
-					Built with cligentic blocks for structured agent output.
-					NDJSON to stdout, next-step hints on stderr, typed error
-					codes with recovery suggestions. The agent is the primary consumer.
+					Built with 6 cligentic blocks: json-mode, next-steps, global-flags,
+					error-map, argv, and doctor. NDJSON to stdout, structured hints on
+					stderr, typed errors with recovery suggestions. Zero framework dependencies.
 				</p>
 				<div class="principles">
 					{principles.map((p) => (

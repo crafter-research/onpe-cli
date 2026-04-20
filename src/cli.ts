@@ -9,10 +9,10 @@ import { parseArgv } from "./cli/foundation/argv";
 import { ONPE_ERRORS, ONPE_STATUS_MAP } from "./errors";
 import { renderActa, renderMesa, renderResumen, renderUbigeos } from "./format";
 
-const HELP = `onpe - Agent-first CLI for ONPE election data
+const HELP = `onpe-cli - Agent-first CLI for ONPE election data
 
 USAGE
-  onpe <command> [options]
+  onpe-cli <command> [options]
 
 COMMANDS
   doctor                     Check API connectivity and status
@@ -30,13 +30,13 @@ FLAGS
   --version                  Show version
 
 EXAMPLES
-  onpe doctor
-  onpe mesa 044739
-  onpe mesa 900001 --json
-  onpe acta 12345 | jq .detalle
-  onpe resumen
-  onpe ubigeos 1
-  onpe ubigeos 2 150000
+  onpe-cli doctor
+  onpe-cli mesa 044739
+  onpe-cli mesa 900001 --json
+  onpe-cli acta 12345 | jq .detalle
+  onpe-cli resumen
+  onpe-cli ubigeos 1
+  onpe-cli ubigeos 2 150000
 `;
 
 function toOnpeError(err: unknown) {
@@ -99,10 +99,10 @@ async function main() {
 				emitNextSteps(
 					result.ok
 						? [
-								{ command: "onpe resumen", description: "view election summary" },
-								{ command: "onpe mesa 000001", description: "look up a specific mesa" },
+								{ command: "onpe-cli resumen", description: "view election summary" },
+								{ command: "onpe-cli mesa 000001", description: "look up a specific mesa" },
 							]
-						: [{ command: "onpe doctor", description: "retry after fixing connectivity" }],
+						: [{ command: "onpe-cli doctor", description: "retry after fixing connectivity" }],
 					flags,
 				);
 				process.exit(result.ok ? 0 : 1);
@@ -112,7 +112,7 @@ async function main() {
 			case "mesa": {
 				const codigo = positional[1];
 				if (!codigo) {
-					reportError("Missing mesa code. Usage: onpe mesa <codigo>", flags);
+					reportError("Missing mesa code. Usage: onpe-cli mesa <codigo>", flags);
 					process.exit(1);
 				}
 				const padded = codigo.padStart(6, "0");
@@ -121,7 +121,7 @@ async function main() {
 				emit(mesas, flags, () => renderMesa(mesas));
 				if (mesas.length > 0) {
 					emitNextSteps(
-						[{ command: `onpe acta ${mesas[0]!.id}`, description: "view full vote breakdown" }],
+						[{ command: `onpe-cli acta ${mesas[0]!.id}`, description: "view full vote breakdown" }],
 						flags,
 					);
 				}
@@ -131,7 +131,7 @@ async function main() {
 			case "acta": {
 				const idStr = positional[1];
 				if (!idStr) {
-					reportError("Missing acta ID. Usage: onpe acta <id>", flags);
+					reportError("Missing acta ID. Usage: onpe-cli acta <id>", flags);
 					process.exit(1);
 				}
 				const id = Number.parseInt(idStr, 10);
@@ -145,7 +145,7 @@ async function main() {
 				if (acta.archivos && acta.archivos.length > 0) {
 					emitNextSteps(
 						acta.archivos.map((a) => ({
-							command: `onpe file-url ${a.id}`,
+							command: `onpe-cli file-url ${a.id}`,
 							description: `download ${a.tipo === 1 ? "escrutinio" : "instalacion"} PDF`,
 							optional: true,
 						})),
@@ -162,8 +162,8 @@ async function main() {
 				emit(resumen, flags, () => renderResumen(resumen));
 				emitNextSteps(
 					[
-						{ command: "onpe ubigeos 1", description: "list departments" },
-						{ command: "onpe mesa <codigo>", description: "look up a specific mesa" },
+						{ command: "onpe-cli ubigeos 1", description: "list departments" },
+						{ command: "onpe-cli mesa <codigo>", description: "look up a specific mesa" },
 					],
 					flags,
 				);
@@ -180,7 +180,7 @@ async function main() {
 				if (nivel < 3 && ubigeos.length > 0) {
 					emitNextSteps(
 						[{
-							command: `onpe ubigeos ${nivel + 1} ${ubigeos[0]!.codigo}`,
+							command: `onpe-cli ubigeos ${nivel + 1} ${ubigeos[0]!.codigo}`,
 							description: `drill down to nivel ${nivel + 1}`,
 						}],
 						flags,
@@ -192,7 +192,7 @@ async function main() {
 			case "file-url": {
 				const fileId = positional[1];
 				if (!fileId) {
-					reportError("Missing file ID. Usage: onpe file-url <fileId>", flags);
+					reportError("Missing file ID. Usage: onpe-cli file-url <fileId>", flags);
 					process.exit(1);
 				}
 				note(`Resolving file URL for ${fileId}...`, flags);
