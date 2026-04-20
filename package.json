@@ -1,0 +1,28 @@
+{
+  "name": "@crafter/onpe-cli",
+  "version": "0.1.0",
+  "description": "Agent-first CLI for ONPE election data",
+  "type": "module",
+  "bin": {
+    "onpe": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --outdir dist --target node",
+    "check": "biome check --write ."
+  },
+  "dependencies": {
+    "picocolors": "^1.1.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bun": "^1.2.4"
+  },
+  "files": ["dist", "README.md"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crafter-research/onpe-cli"
+  },
+  "keywords": ["onpe", "peru", "elections", "cli", "agent-first"]
+}
