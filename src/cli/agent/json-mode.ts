@@ -78,7 +78,7 @@ export function emitSuccess(message: string, opts: EmitOptions = {}): void {
     process.stdout.write(`${JSON.stringify({ ok: true, message })}\n`);
     return;
   }
-  const prefix = shouldColor() ? pc.green("✓") : "✓";
+  const prefix = shouldColor() ? pc.green("\u2713") : "\u2713";
   process.stderr.write(`${prefix} ${message}\n`);
 }
 
@@ -100,7 +100,7 @@ export function reportError(
     return payload;
   }
 
-  const prefix = shouldColor() ? pc.red("✗") : "✗";
+  const prefix = shouldColor() ? pc.red("\u2717") : "\u2717";
   process.stderr.write(`${prefix} ${message}\n`);
   if (stack && process.env.DEBUG) {
     process.stderr.write(`${shouldColor() ? pc.dim(stack) : stack}\n`);

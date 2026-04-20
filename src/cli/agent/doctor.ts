@@ -14,6 +14,7 @@
 //   ]);
 //   renderDoctor(result, opts);
 
+import pc from "picocolors";
 import { type EmitOptions, detectMode, emit } from "./json-mode";
 
 export type DoctorCheck = { name: string; ok: boolean; detail: string };
@@ -55,11 +56,13 @@ export function renderDoctor(result: DoctorResult, opts: EmitOptions = {}): void
   }
 
   for (const check of result.checks) {
-    const badge = check.ok ? "[OK]  " : "[FAIL]";
-    process.stdout.write(`${badge} ${check.name}: ${check.detail}\n`);
+    const badge = check.ok ? pc.green("\u2713") : pc.red("\u2717");
+    const name = check.ok ? pc.bold(check.name) : pc.red(pc.bold(check.name));
+    process.stdout.write(`  ${badge} ${name}  ${pc.dim(check.detail)}\n`);
   }
 
   const total = result.checks.length;
   const passed = result.checks.filter((c) => c.ok).length;
-  process.stdout.write(`\n${passed}/${total} checks passed\n`);
+  const summary = passed === total ? pc.green(`${passed}/${total} passed`) : pc.red(`${passed}/${total} passed`);
+  process.stdout.write(`\n  ${summary}\n\n`);
 }

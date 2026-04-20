@@ -83,7 +83,7 @@ export function emitNextSteps(steps: NextStep[], opts: EmitOptions = {}): void {
   process.stderr.write(`\n${header}\n`);
 
   for (const step of steps) {
-    const marker = step.optional ? "○" : "→";
+    const marker = step.optional ? "\u25CB" : "\u2192";
     const cmd = color ? pc.cyan(step.command) : step.command;
     const desc = color ? pc.dim(step.description) : step.description;
     process.stderr.write(`  ${marker} ${cmd}  ${desc}\n`);

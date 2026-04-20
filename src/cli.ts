@@ -158,7 +158,9 @@ async function main() {
 				}
 				const padded = codigo.padStart(6, "0");
 				note(`Looking up mesa ${padded}...`, flags);
-				const mesas = await client.buscarMesa(padded);
+				const allMesas = await client.buscarMesa(padded);
+				const contabilizadas = allMesas.filter((m) => m.codigoEstadoActa === "C");
+				const mesas = contabilizadas.length > 0 ? [contabilizadas[0]!] : allMesas.length > 0 ? [allMesas[0]!] : [];
 				emit(mesas, flags, () => renderMesa(mesas));
 				if (mesas.length > 0) {
 					emitNextSteps(
