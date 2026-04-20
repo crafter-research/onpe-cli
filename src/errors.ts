@@ -1,5 +1,13 @@
 import type { ErrorMap } from "./cli/foundation/error-map";
 
+export const ONPE_STATUS_MAP: Record<number, string> = {
+	403: "CDN_BLOCKED",
+	404: "NOT_FOUND",
+	429: "CDN_BLOCKED",
+	502: "NETWORK",
+	503: "NETWORK",
+};
+
 export const ONPE_ERRORS: ErrorMap = {
 	CDN_BLOCKED: {
 		name: "CdnBlocked",

@@ -63,9 +63,48 @@ export function mapError(err: unknown, errors: ErrorMap): AppError {
   return new AppError("UNKNOWN", { name: "UnknownError", human: message }, err);
 }
 
-function extractCode(err: unknown): string | null {
-  if (err && typeof err === "object" && "code" in err) {
-    return String((err as Record<string, unknown>).code);
+/**
+ * Creates an AppError from an HTTP response. Looks up the status code in
+ * statusMap first, then falls back to extractCode on the body string parsed
+ * as JSON, then returns a generic HTTP error.
+ */
+export function fromHttp(
+  status: number,
+  body: string,
+  statusMap: Record<number, string>,
+  errors: ErrorMap,
+): AppError {
+  const mappedCode = statusMap[status];
+  if (mappedCode && errors[mappedCode]) {
+    return new AppError(mappedCode, errors[mappedCode]);
   }
-  return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    parsed = null;
+  }
+  const code = extractCode(parsed);
+  if (code && errors[code]) {
+    return new AppError(code, errors[code]);
+  }
+  return new AppError("HTTP_ERROR", {
+    name: "HttpError",
+    human: `HTTP ${status}`,
+    hint: body.slice(0, 120) || undefined,
+  });
+}
+
+function extractCode(err: unknown): string | null {
+  if (!err || typeof err !== "object") return null;
+  const obj = err as Record<string, unknown>;
+  const candidate =
+    obj.code ??
+    obj.status ??
+    obj.statusCode ??
+    (obj.response && typeof obj.response === "object"
+      ? (obj.response as Record<string, unknown>).status
+      : undefined);
+  if (candidate === undefined || candidate === null) return null;
+  return String(candidate);
 }

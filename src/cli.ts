@@ -2,10 +2,12 @@
 import { OnpeClient, OnpeError } from "./client";
 import { emit, note, reportError } from "./cli/agent/json-mode";
 import { emitNextSteps } from "./cli/agent/next-steps";
-import { type GlobalFlags, parseGlobalFlags } from "./cli/foundation/global-flags";
-import { AppError, mapError } from "./cli/foundation/error-map";
-import { ONPE_ERRORS } from "./errors";
-import { renderActa, renderDoctor, renderMesa, renderResumen, renderUbigeos } from "./format";
+import { renderDoctor, runDoctor } from "./cli/agent/doctor";
+import { parseGlobalFlags } from "./cli/foundation/global-flags";
+import { fromHttp, mapError } from "./cli/foundation/error-map";
+import { parseArgv } from "./cli/foundation/argv";
+import { ONPE_ERRORS, ONPE_STATUS_MAP } from "./errors";
+import { renderActa, renderMesa, renderResumen, renderUbigeos } from "./format";
 
 const HELP = `onpe - Agent-first CLI for ONPE election data
 
@@ -37,41 +39,9 @@ EXAMPLES
   onpe ubigeos 2 150000
 `;
 
-function parseArgs(argv: string[]) {
-	const args = argv.slice(2);
-	const raw: Record<string, unknown> = {};
-	const positional: string[] = [];
-
-	for (let i = 0; i < args.length; i++) {
-		const arg = args[i]!;
-		if (arg === "--help" || arg === "-h") {
-			raw.help = true;
-		} else if (arg === "--version") {
-			raw.version = true;
-		} else if (arg.startsWith("--")) {
-			const key = arg.slice(2);
-			const next = args[i + 1];
-			if (next && !next.startsWith("--")) {
-				raw[key] = next;
-				i++;
-			} else {
-				raw[key] = true;
-			}
-		} else if (arg === "-q") {
-			raw.quiet = true;
-		} else {
-			positional.push(arg);
-		}
-	}
-
-	return { raw, positional };
-}
-
-function toOnpeError(err: unknown): AppError {
+function toOnpeError(err: unknown) {
 	if (err instanceof OnpeError) {
-		if (err.body.includes("HTML fallback")) return mapError({ code: "CDN_BLOCKED" }, ONPE_ERRORS);
-		if (err.status === 404) return mapError({ code: "NOT_FOUND" }, ONPE_ERRORS);
-		return mapError(err, ONPE_ERRORS);
+		return fromHttp(err.status, err.body, ONPE_STATUS_MAP, ONPE_ERRORS);
 	}
 	if (err instanceof Error && err.name === "AbortError") {
 		return mapError({ code: "TIMEOUT" }, ONPE_ERRORS);
@@ -83,20 +53,21 @@ function toOnpeError(err: unknown): AppError {
 }
 
 async function main() {
-	const { raw, positional } = parseArgs(process.argv);
-	const flags = parseGlobalFlags(raw);
+	const args = parseArgv();
+	const flags = parseGlobalFlags(args);
+	const positional = args._;
 
-	if (raw.help || positional.length === 0) {
+	if (args.help || args.h || positional.length === 0) {
 		process.stdout.write(HELP);
 		process.exit(0);
 	}
 
-	if (raw.version) {
+	if (args.version) {
 		process.stdout.write("0.1.0\n");
 		process.exit(0);
 	}
 
-	const timeout = raw.timeout ? Number.parseInt(raw.timeout as string, 10) : undefined;
+	const timeout = args.timeout ? Number.parseInt(args.timeout as string, 10) : undefined;
 	const client = new OnpeClient({ timeout });
 	const command = positional[0];
 
@@ -104,8 +75,27 @@ async function main() {
 		switch (command) {
 			case "doctor": {
 				note("Checking ONPE API endpoints...", flags);
-				const result = await client.doctor();
-				emit(result, flags, () => renderDoctor(result.checks, result.ok));
+				const result = await runDoctor([
+					async () => {
+						const p = await client.procesoActivo();
+						return { name: "proceso-activo", ok: true, detail: p.nombre };
+					},
+					async () => {
+						const p = await client.procesoActivo();
+						const e = await client.elecciones(p.id);
+						return { name: "elecciones", ok: true, detail: `${e.length} elecciones` };
+					},
+					async () => {
+						const { eleccion } = await client.resolveEleccion();
+						const r = await client.resumenGeneral(eleccion.idEleccion);
+						return { name: "resumen-general", ok: true, detail: `${r.contabilizadas} actas (${r.actasContabilizadas}%)` };
+					},
+					async () => {
+						await client.buscarMesa("000001");
+						return { name: "buscar-mesa", ok: true, detail: "mesa 000001 accesible" };
+					},
+				]);
+				renderDoctor(result, flags);
 				emitNextSteps(
 					result.ok
 						? [
@@ -131,9 +121,7 @@ async function main() {
 				emit(mesas, flags, () => renderMesa(mesas));
 				if (mesas.length > 0) {
 					emitNextSteps(
-						[
-							{ command: `onpe acta ${mesas[0]!.id}`, description: "view full vote breakdown" },
-						],
+						[{ command: `onpe acta ${mesas[0]!.id}`, description: "view full vote breakdown" }],
 						flags,
 					);
 				}
@@ -190,14 +178,11 @@ async function main() {
 				const ubigeos = await client.ubigeos(eleccion.idEleccion, nivel, padre);
 				emit(ubigeos, flags, () => renderUbigeos(ubigeos));
 				if (nivel < 3 && ubigeos.length > 0) {
-					const nextNivel = nivel + 1;
 					emitNextSteps(
-						[
-							{
-								command: `onpe ubigeos ${nextNivel} ${ubigeos[0]!.codigo}`,
-								description: `drill down to nivel ${nextNivel}`,
-							},
-						],
+						[{
+							command: `onpe ubigeos ${nivel + 1} ${ubigeos[0]!.codigo}`,
+							description: `drill down to nivel ${nivel + 1}`,
+						}],
 						flags,
 					);
 				}

@@ -1,14 +1,4 @@
-import type { ActaDetalle, DoctorCheck, MesaSearch, ResumenGeneral, Ubigeo } from "./client";
-
-export function renderDoctor(checks: DoctorCheck[], ok: boolean): void {
-	console.log("ONPE API Health Check\n");
-	for (const check of checks) {
-		const icon = check.ok ? "OK" : "FAIL";
-		console.log(`  [${icon}] ${check.name}: ${check.detail}`);
-	}
-	console.log("");
-	console.log(ok ? "All checks passed" : "Some checks failed");
-}
+import type { ActaDetalle, MesaSearch, ResumenGeneral, Ubigeo } from "./client";
 
 export function renderMesa(mesas: MesaSearch[]): void {
 	if (mesas.length === 0) {

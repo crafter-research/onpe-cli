@@ -120,70 +120,6 @@ export class OnpeClient {
 		return { proceso, eleccion };
 	}
 
-	async doctor(): Promise<DoctorResult> {
-		const checks: DoctorCheck[] = [];
-		let proceso: ProcesoElectoral | null = null;
-
-		try {
-			proceso = await this.procesoActivo();
-			checks.push({ name: "proceso-activo", ok: true, detail: proceso.nombre });
-		} catch (e) {
-			checks.push({
-				name: "proceso-activo",
-				ok: false,
-				detail: e instanceof Error ? e.message : String(e),
-			});
-		}
-
-		if (proceso) {
-			try {
-				const elecciones = await this.elecciones(proceso.id);
-				checks.push({
-					name: "elecciones",
-					ok: true,
-					detail: `${elecciones.length} elecciones`,
-				});
-
-				const presidencial = elecciones.find((e) => e.idEleccion > 0 && e.esPrincipal);
-				if (presidencial) {
-					try {
-						const resumen = await this.resumenGeneral(presidencial.idEleccion);
-						checks.push({
-							name: "resumen-general",
-							ok: true,
-							detail: `${resumen.actasContabilizadas} actas contabilizadas`,
-						});
-					} catch (e) {
-						checks.push({
-							name: "resumen-general",
-							ok: false,
-							detail: e instanceof Error ? e.message : String(e),
-						});
-					}
-				}
-			} catch (e) {
-				checks.push({
-					name: "elecciones",
-					ok: false,
-					detail: e instanceof Error ? e.message : String(e),
-				});
-			}
-		}
-
-		try {
-			await this.buscarMesa("000001");
-			checks.push({ name: "buscar-mesa", ok: true, detail: "mesa 000001 accesible" });
-		} catch (e) {
-			checks.push({
-				name: "buscar-mesa",
-				ok: false,
-				detail: e instanceof Error ? e.message : String(e),
-			});
-		}
-
-		const allOk = checks.every((c) => c.ok);
-		return { ok: allOk, checks, proceso };
-	}
 }
 
 export interface ProcesoElectoral {
@@ -303,14 +239,3 @@ export interface ResultadoDepartamento {
 	fechaActualizacion: string;
 }
 
-export interface DoctorCheck {
-	name: string;
-	ok: boolean;
-	detail: string;
-}
-
-export interface DoctorResult {
-	ok: boolean;
-	checks: DoctorCheck[];
-	proceso: ProcesoElectoral | null;
-}
