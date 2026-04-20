@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import pc from "picocolors";
 import { OnpeClient, OnpeError } from "./client";
 import { emit, note, reportError } from "./cli/agent/json-mode";
 import { emitNextSteps } from "./cli/agent/next-steps";
@@ -6,38 +7,67 @@ import { renderDoctor, runDoctor } from "./cli/agent/doctor";
 import { parseGlobalFlags } from "./cli/foundation/global-flags";
 import { fromHttp, mapError } from "./cli/foundation/error-map";
 import { parseArgv } from "./cli/foundation/argv";
+import { printBanner } from "./cli/foundation/banner";
 import { ONPE_ERRORS, ONPE_STATUS_MAP } from "./errors";
 import { renderActa, renderMesa, renderResumen, renderUbigeos } from "./format";
 
-const HELP = `onpe-cli - Agent-first CLI for ONPE election data
+const VERSION = "0.2.0";
 
-USAGE
-  onpe-cli <command> [options]
+const COMMANDS: [string, string][] = [
+	["doctor", "Check API connectivity and status"],
+	["mesa <codigo>", "Look up a mesa by code (e.g. 000001, 900001)"],
+	["acta <id>", "Get full acta detail by numeric ID"],
+	["resumen", "Get general election summary"],
+	["ubigeos [nivel] [padre]", "List ubigeos (nivel: 1=dept, 2=prov, 3=dist)"],
+	["file-url <fileId>", "Get download URL for an acta file"],
+];
 
-COMMANDS
-  doctor                     Check API connectivity and status
-  mesa <codigo>              Look up a mesa by code (e.g. 000001, 900001)
-  acta <id>                  Get full acta detail by numeric ID
-  resumen                    Get general election summary
-  ubigeos [nivel] [padre]    List ubigeos (nivel: 1=dept, 2=prov, 3=dist)
-  file-url <fileId>          Get download URL for an acta file
+const FLAGS: [string, string][] = [
+	["--json", "Emit JSON for agents (auto when piped)"],
+	["--quiet", "Suppress non-essential output"],
+	["--timeout <ms>", "Request timeout in ms (default: 15000)"],
+	["--help", "Show this help"],
+	["--version", "Show version"],
+];
 
-FLAGS
-  --json                     Emit JSON for agents (auto when piped)
-  --quiet                    Suppress non-essential output
-  --timeout <ms>             Request timeout in ms (default: 15000)
-  --help                     Show this help
-  --version                  Show version
+const EXAMPLES = [
+	"onpe-cli doctor",
+	"onpe-cli mesa 044739",
+	"onpe-cli mesa 900001 --json",
+	"onpe-cli acta 12345 | jq .detalle",
+	"onpe-cli resumen",
+	"onpe-cli ubigeos 1",
+	"onpe-cli ubigeos 2 150000",
+];
 
-EXAMPLES
-  onpe-cli doctor
-  onpe-cli mesa 044739
-  onpe-cli mesa 900001 --json
-  onpe-cli acta 12345 | jq .detalle
-  onpe-cli resumen
-  onpe-cli ubigeos 1
-  onpe-cli ubigeos 2 150000
-`;
+function renderHelp(): string {
+	const lines: string[] = [];
+	const pad = COMMANDS.reduce((max, [cmd]) => Math.max(max, cmd.length), 0);
+
+	lines.push(pc.bold("Commands"));
+	for (const [cmd, desc] of COMMANDS) {
+		lines.push(`  ${pc.bold(cmd.padEnd(pad + 2))}${pc.dim(desc)}`);
+	}
+	lines.push("");
+
+	lines.push(pc.bold("Flags"));
+	const flagPad = FLAGS.reduce((max, [f]) => Math.max(max, f.length), 0);
+	for (const [flag, desc] of FLAGS) {
+		lines.push(`  ${flag.padEnd(flagPad + 2)}${pc.dim(desc)}`);
+	}
+	lines.push("");
+
+	lines.push(pc.bold("Examples"));
+	for (const ex of EXAMPLES) {
+		lines.push(`  ${pc.dim(ex)}`);
+	}
+	lines.push("");
+
+	lines.push(pc.dim(`Usage:  onpe-cli <command> [args...]   |   onpe-cli <command> --help`));
+	lines.push("");
+
+	return lines.join("\n");
+}
 
 function toOnpeError(err: unknown) {
 	if (err instanceof OnpeError) {
@@ -57,13 +87,24 @@ async function main() {
 	const flags = parseGlobalFlags(args);
 	const positional = args._;
 
-	if (args.help || args.h || positional.length === 0) {
-		process.stdout.write(HELP);
+	const isHelp = args.help || args.h || positional.length === 0 || positional[0] === "help";
+	const isJson = flags.json;
+
+	if (args.version) {
+		process.stdout.write(`${VERSION}\n`);
 		process.exit(0);
 	}
 
-	if (args.version) {
-		process.stdout.write("0.1.0\n");
+	if (isHelp) {
+		if (!isJson && process.stdout.isTTY) {
+			printBanner({
+				name: "ONPE CLI",
+				tagline: "Agent-first election data for Peru",
+				version: VERSION,
+				gradient: ["#6366F1", "#A78BFA"],
+			});
+		}
+		process.stdout.write(renderHelp());
 		process.exit(0);
 	}
 
@@ -203,7 +244,7 @@ async function main() {
 
 			default:
 				reportError(`Unknown command: ${command}`, flags);
-				process.stdout.write(HELP);
+				process.stdout.write(renderHelp());
 				process.exit(1);
 		}
 	} catch (err) {

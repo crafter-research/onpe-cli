@@ -1,72 +1,130 @@
+import pc from "picocolors";
 import type { ActaDetalle, MesaSearch, ResumenGeneral, Ubigeo } from "./client";
+import { partyColor } from "./partidos";
+
+const BAR_WIDTH = 20;
+
+function bar(pct: number, color: (s: string) => string): string {
+	const filled = Math.round((pct / 100) * BAR_WIDTH);
+	const empty = BAR_WIDTH - filled;
+	return color("\u2588".repeat(filled)) + pc.dim("\u2591".repeat(empty));
+}
+
+function estadoBadge(code: string, desc: string): string {
+	switch (code) {
+		case "C":
+			return pc.green(`[${desc}]`);
+		case "E":
+			return pc.yellow(`[${desc}]`);
+		default:
+			return pc.dim(`[${desc}]`);
+	}
+}
 
 export function renderMesa(mesas: MesaSearch[]): void {
 	if (mesas.length === 0) {
-		console.log("No mesa found");
+		console.log(pc.dim("No mesa found"));
 		return;
 	}
 	for (const m of mesas) {
-		console.log(`Mesa ${m.codigoMesa}`);
-		console.log(`  Local:          ${m.nombreLocalVotacion}`);
-		console.log(`  Centro Poblado: ${m.centroPoblado}`);
-		console.log(`  Habiles:        ${m.totalElectoresHabiles}`);
-		console.log(`  Emitidos:       ${m.totalVotosEmitidos}`);
-		console.log(`  Validos:        ${m.totalVotosValidos}`);
-		console.log(`  Asistentes:     ${m.totalAsistentes}`);
-		console.log(`  Participacion:  ${m.porcentajeParticipacionCiudadana.toFixed(1)}%`);
-		console.log(`  Estado:         ${m.descripcionEstadoActa} (${m.codigoEstadoActa})`);
+		console.log("");
+		console.log(`  ${pc.bold(`Mesa ${m.codigoMesa}`)}  ${estadoBadge(m.codigoEstadoActa, m.descripcionEstadoActa)}`);
+		console.log("");
+		if (m.nombreLocalVotacion) {
+			console.log(`  ${pc.dim("Local")}          ${m.nombreLocalVotacion}`);
+		}
+		if (m.centroPoblado) {
+			console.log(`  ${pc.dim("Centro Poblado")} ${m.centroPoblado}`);
+		}
+		const participacion = m.porcentajeParticipacionCiudadana ?? 0;
+		console.log(`  ${pc.dim("Habiles")}        ${pc.bold(String(m.totalElectoresHabiles))}`);
+		console.log(`  ${pc.dim("Emitidos")}       ${m.totalVotosEmitidos ?? "-"}  ${pc.dim("Validos")} ${m.totalVotosValidos ?? "-"}`);
+		console.log(`  ${pc.dim("Participacion")}  ${bar(participacion, pc.cyan)} ${pc.bold(`${participacion.toFixed(1)}%`)}`);
 		console.log("");
 	}
 }
 
 export function renderActa(acta: ActaDetalle): void {
-	console.log(`Mesa ${acta.codigoMesa} - ${acta.descripcionMesa}`);
-	console.log(`  Ubigeo: ${acta.ubigeoNivel01} / ${acta.ubigeoNivel02} / ${acta.ubigeoNivel03}`);
-	console.log(`  Local: ${acta.nombreLocalVotacion}`);
-	console.log(`  Habiles: ${acta.totalElectoresHabiles}  Emitidos: ${acta.totalVotosEmitidos}  Validos: ${acta.totalVotosValidos}`);
-	console.log(`  Estado: ${acta.descripcionEstadoActa}`);
 	console.log("");
-	console.log("  Resultados:");
+	console.log(`  ${pc.bold(`Mesa ${acta.codigoMesa}`)}  ${estadoBadge(acta.codigoEstadoActa, acta.descripcionEstadoActa)}`);
+	console.log(`  ${pc.dim(`${acta.ubigeoNivel01} / ${acta.ubigeoNivel02} / ${acta.ubigeoNivel03}`)}`);
+	if (acta.nombreLocalVotacion) {
+		console.log(`  ${acta.nombreLocalVotacion}`);
+	}
+	console.log("");
+	console.log(`  ${pc.dim("Habiles")} ${pc.bold(String(acta.totalElectoresHabiles))}  ${pc.dim("Emitidos")} ${pc.bold(String(acta.totalVotosEmitidos))}  ${pc.dim("Validos")} ${pc.bold(String(acta.totalVotosValidos))}`);
+	console.log("");
 
 	const sorted = [...acta.detalle]
 		.filter((d) => d.grafico === 1)
 		.sort((a, b) => b.nvotos - a.nvotos);
 
-	const maxName = Math.max(...sorted.map((d) => d.descripcion.length), 10);
+	if (sorted.length === 0) return;
+
+	const maxVotes = sorted[0]!.nvotos;
+	const maxName = Math.min(Math.max(...sorted.map((d) => d.descripcion.length), 10), 40);
+
 	for (const d of sorted) {
-		const pct = d.nporcentajeVotosValidos?.toFixed(1) ?? "-";
-		console.log(`    ${d.descripcion.padEnd(maxName)}  ${String(d.nvotos).padStart(4)}  ${pct.padStart(5)}%`);
+		const pct = d.nporcentajeVotosValidos ?? 0;
+		const name = d.descripcion.length > maxName
+			? `${d.descripcion.slice(0, maxName - 1)}\u2026`
+			: d.descripcion.padEnd(maxName);
+		const coloredName = partyColor(d.descripcion, name);
+		const relBar = maxVotes > 0 ? (d.nvotos / maxVotes) * 100 : 0;
+		const barStr = bar(relBar, (s) => partyColor(d.descripcion, s) || pc.blue(s));
+		const votes = String(d.nvotos).padStart(4);
+		const pctStr = `${pct.toFixed(1)}%`.padStart(6);
+
+		if (d === sorted[0]) {
+			console.log(`  ${coloredName}  ${barStr} ${pc.bold(votes)} ${pc.bold(pctStr)}`);
+		} else {
+			console.log(`  ${coloredName}  ${barStr} ${votes} ${pc.dim(pctStr)}`);
+		}
 	}
 
 	const especiales = acta.detalle.filter((d) => d.grafico !== 1);
 	if (especiales.length > 0) {
 		console.log("");
 		for (const d of especiales) {
-			console.log(`    ${d.descripcion.padEnd(maxName)}  ${String(d.nvotos).padStart(4)}`);
+			console.log(`  ${pc.dim(d.descripcion.padEnd(maxName))}  ${pc.dim(String(d.nvotos).padStart(4))}`);
 		}
 	}
 
 	if (acta.archivos && acta.archivos.length > 0) {
 		console.log("");
-		console.log("  Archivos:");
+		console.log(`  ${pc.dim("Archivos:")}`);
 		for (const a of acta.archivos) {
-			console.log(`    [${a.tipo === 1 ? "Escrutinio" : "Instalacion"}] ${a.id}`);
+			const tipo = a.tipo === 1 ? pc.cyan("Escrutinio") : pc.dim("Instalacion");
+			console.log(`    ${tipo}  ${pc.dim(a.id)}`);
 		}
 	}
+	console.log("");
 }
 
 export function renderResumen(resumen: ResumenGeneral): void {
-	console.log("Resumen General");
-	console.log(`  Actas contabilizadas: ${resumen.actasContabilizadas} (${resumen.contabilizadas.toFixed(1)}%)`);
-	console.log(`  Total actas:         ${resumen.totalActas}`);
-	console.log(`  Participacion:       ${resumen.participacionCiudadana.toFixed(1)}%`);
-	console.log(`  Enviadas JEE:        ${resumen.actasEnviadasJee} (${resumen.enviadasJee.toFixed(1)}%)`);
-	console.log(`  Pendientes JEE:      ${resumen.actasPendientesJee} (${resumen.pendientesJee.toFixed(1)}%)`);
-	console.log(`  Actualizado:         ${resumen.fechaActualizacion}`);
+	console.log("");
+	console.log(`  ${pc.bold("Resumen General")}`);
+	console.log("");
+
+	const pctContab = resumen.actasContabilizadas ?? 0;
+	console.log(`  ${pc.dim("Contabilizadas")}  ${bar(pctContab, pc.green)} ${pc.bold(String(resumen.contabilizadas))} ${pc.dim(`(${pctContab}%)`)}`);
+
+	const pctJee = resumen.enviadasJee ?? 0;
+	console.log(`  ${pc.dim("Enviadas JEE")}    ${bar(pctJee, pc.cyan)} ${pc.bold(String(resumen.actasEnviadasJee))} ${pc.dim(`(${pctJee}%)`)}`);
+
+	const pctPend = resumen.pendientesJee ?? 0;
+	console.log(`  ${pc.dim("Pendientes JEE")}  ${bar(pctPend, pc.yellow)} ${pc.bold(String(resumen.actasPendientesJee))} ${pc.dim(`(${pctPend}%)`)}`);
+
+	console.log("");
+	console.log(`  ${pc.dim("Total actas")}     ${pc.bold(String(resumen.totalActas))}`);
+	console.log(`  ${pc.dim("Participacion")}   ${pc.bold(`${resumen.participacionCiudadana.toFixed(1)}%`)}`);
+	console.log(`  ${pc.dim("Actualizado")}     ${pc.dim(resumen.fechaActualizacion)}`);
+	console.log("");
 }
 
 export function renderUbigeos(ubigeos: Ubigeo[]): void {
 	for (const u of ubigeos) {
-		console.log(`${u.codigo}  ${u.nombre}`);
+		console.log(`  ${pc.dim(u.codigo)}  ${pc.bold(u.nombre)}`);
 	}
+	console.log("");
 }
