@@ -1,0 +1,174 @@
+---
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Legal — onpe-cli</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+		<style>
+			* { margin: 0; padding: 0; box-sizing: border-box; }
+			html { scroll-behavior: smooth; }
+			body {
+				font-family: 'Inter', system-ui, sans-serif;
+				font-size: 15px;
+				line-height: 1.8;
+				color: #1A1A1A;
+				background: #FFFFFF;
+				-webkit-font-smoothing: antialiased;
+			}
+			nav {
+				position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+				background: rgba(255,255,255,0.85);
+				backdrop-filter: blur(12px);
+				border-bottom: 1px solid #E5E7EB;
+			}
+			.nav-inner {
+				max-width: 720px; margin: 0 auto; padding: 0 24px;
+				height: 56px; display: flex; align-items: center;
+			}
+			.nav-brand {
+				font-weight: 700; font-size: 15px; color: #4338CA;
+				text-decoration: none;
+			}
+			.nav-brand span { color: #A78BFA; }
+			.content {
+				max-width: 720px;
+				margin: 0 auto;
+				padding: 100px 24px 80px;
+			}
+			h1 { font-size: 28px; font-weight: 700; color: #312E81; margin-bottom: 8px; letter-spacing: -0.02em; }
+			.subtitle { font-size: 14px; color: #9CA3AF; margin-bottom: 40px; }
+			h2 { font-size: 18px; font-weight: 600; margin: 32px 0 12px; color: #1A1A1A; }
+			p { color: #4B5563; margin-bottom: 16px; }
+			ul { color: #4B5563; margin-bottom: 16px; padding-left: 24px; }
+			li { margin-bottom: 6px; }
+			a { color: #4338CA; }
+			code { font-family: 'JetBrains Mono', monospace; font-size: 13px; background: #F5F3FF; padding: 2px 6px; border-radius: 4px; }
+			.legal-ref {
+				font-size: 13px;
+				color: #9CA3AF;
+				border-left: 2px solid #E5E7EB;
+				padding-left: 12px;
+				margin: 12px 0 20px;
+				font-style: italic;
+			}
+			footer {
+				padding: 32px 24px; border-top: 1px solid #E5E7EB;
+				text-align: center; font-size: 13px; color: #9CA3AF;
+			}
+			footer a { color: #4338CA; text-decoration: none; }
+		</style>
+	</head>
+	<body>
+		<nav>
+			<div class="nav-inner">
+				<a href="/" class="nav-brand">onpe<span>/</span>cli</a>
+			</div>
+		</nav>
+
+		<main class="content">
+			<h1>Marco Legal</h1>
+			<p class="subtitle">Actualizado: abril 2026</p>
+
+			<h2>Sobre esta herramienta</h2>
+			<p>
+				onpe-cli es una herramienta open-source que consulta la API publica
+				de resultados electorales de la ONPE (Oficina Nacional de Procesos
+				Electorales). No modifica, altera ni interfiere con ningun sistema
+				electoral. Solo lee datos publicos.
+			</p>
+
+			<h2>Naturaleza de los datos</h2>
+			<p>
+				Todos los datos consultados por onpe-cli provienen de endpoints
+				publicos de <code>resultadoelectoral.onpe.gob.pe</code>, la misma
+				fuente que alimenta el portal web de resultados que cualquier
+				ciudadano puede consultar desde su navegador.
+			</p>
+			<ul>
+				<li>Los datos electorales son informacion publica por mandato constitucional</li>
+				<li>La herramienta no requiere autenticacion ni credenciales</li>
+				<li>No se accede a informacion personal de votantes</li>
+				<li>No se modifica ningun registro electoral</li>
+			</ul>
+
+			<h2>Base legal</h2>
+
+			<div class="legal-ref">
+				Articulo 2, inciso 5 de la Constitucion Politica del Peru: Toda persona
+				tiene derecho a solicitar sin expresion de causa la informacion que requiera
+				y a recibirla de cualquier entidad publica.
+			</div>
+
+			<div class="legal-ref">
+				Ley 27806 — Ley de Transparencia y Acceso a la Informacion Publica:
+				Las entidades de la administracion publica estableceran progresivamente
+				la difusion a traves de Internet de la informacion que obra en su poder.
+			</div>
+
+			<div class="legal-ref">
+				Decreto Supremo 072-2003-PCM: Los resultados de procesos electorales
+				son informacion publica de acceso irrestricto.
+			</div>
+
+			<h2>Uso responsable</h2>
+			<p>
+				Esta herramienta esta disenada para facilitar el acceso programatico
+				a datos electorales publicos con fines de:
+			</p>
+			<ul>
+				<li>Fiscalizacion ciudadana y transparencia</li>
+				<li>Investigacion academica y analisis estadistico</li>
+				<li>Periodismo de datos</li>
+				<li>Desarrollo de aplicaciones civicas</li>
+			</ul>
+			<p>
+				El usuario es responsable del uso que haga de los datos obtenidos.
+				No utilice esta herramienta para difundir desinformacion,
+				interferir con procesos electorales, o realizar solicitudes
+				masivas que afecten la disponibilidad del servicio.
+			</p>
+
+			<h2>Rate limiting</h2>
+			<p>
+				onpe-cli no implementa mecanismos para evadir limites de tasa
+				(rate limiting). Las solicitudes se realizan de forma secuencial
+				con los tiempos de respuesta naturales de la API. Si la ONPE
+				implementa restricciones de acceso, la herramienta las respeta.
+			</p>
+
+			<h2>Deslinde de responsabilidad</h2>
+			<p>
+				onpe-cli se proporciona "tal cual" sin garantia de ningun tipo.
+				Los autores no son responsables de conclusiones, interpretaciones
+				o decisiones basadas en los datos obtenidos mediante esta herramienta.
+			</p>
+			<p>
+				Esta herramienta no esta afiliada, respaldada ni conectada
+				oficialmente con la ONPE de ninguna manera. ONPE es una marca
+				del Estado peruano.
+			</p>
+
+			<h2>Licencia</h2>
+			<p>
+				onpe-cli esta publicado bajo la licencia MIT.
+				Codigo fuente: <a href="https://github.com/crafter-research/onpe-cli">github.com/crafter-research/onpe-cli</a>
+			</p>
+
+			<h2>Contacto</h2>
+			<p>
+				Para consultas legales: <a href="mailto:legal@crafterstation.com">legal@crafterstation.com</a><br/>
+				Crafter Research — Lima, Peru
+			</p>
+		</main>
+
+		<footer>
+			<a href="/">onpe-cli</a> — <a href="https://github.com/crafter-research">Crafter Research</a>, Lima, Peru
+		</footer>
+	</body>
+</html>

@@ -1,0 +1,334 @@
+---
+import { codeToHtml } from "shiki";
+
+const onpeTheme = {
+	name: "onpe",
+	type: "dark" as const,
+	settings: [
+		{ scope: ["comment", "comment.line", "comment.line.number-sign", "punctuation.definition.comment"], settings: { foreground: "#7C7C9A", fontStyle: "italic" } },
+		{ scope: ["string", "string.quoted"], settings: { foreground: "#C4B5FD" } },
+		{ scope: ["constant", "constant.numeric"], settings: { foreground: "#A78BFA" } },
+		{ scope: ["keyword", "keyword.operator"], settings: { foreground: "#818CF8" } },
+		{ scope: ["entity.name.function", "support.function"], settings: { foreground: "#E0E7FF" } },
+		{ scope: ["variable", "variable.other"], settings: { foreground: "#C7D2FE" } },
+		{ scope: ["punctuation"], settings: { foreground: "#6366F1" } },
+		{ scope: ["source", "text"], settings: { foreground: "#C7D2FE" } },
+	],
+	colors: {
+		"editor.background": "#1E1B4B",
+		"editor.foreground": "#C7D2FE",
+	},
+};
+
+const features = [
+	{
+		title: "Mesa Lookup",
+		desc: "Query any mesa by code. Works with regular (000001-088064) and rural centros poblados (900001-904703).",
+		code: "$ onpe mesa 044739\nMesa 044739\n  Local:  IE MIGUEL GRAU SEMINARIO\n  Habiles: 300  Emitidos: 237\n  Estado: Contabilizada (C)",
+	},
+	{
+		title: "Acta Detail",
+		desc: "Full vote breakdown per party with percentages. Includes file IDs for PDF download.",
+		code: "$ onpe acta 12345 --json | jq .detalle\n# Returns all party votes, candidates,\n# percentages, and acta file references",
+	},
+	{
+		title: "Ubigeo Navigation",
+		desc: "Drill down departments, provinces, and districts. 3 levels matching ONPE's geographic hierarchy.",
+		code: "$ onpe ubigeos 1\n010000  AMAZONAS\n020000  ANCASH\n030000  APURIMAC\n...",
+	},
+	{
+		title: "Election Summary",
+		desc: "Real-time totals: actas counted, participation rate, JEE pipeline status.",
+		code: "$ onpe resumen\nActas contabilizadas: 86664 (93.6%)\nTotal actas:         92767\nParticipacion:       79.2%",
+	},
+];
+
+const featureHtmls = await Promise.all(
+	features.map(f => codeToHtml(f.code, { lang: "bash", theme: onpeTheme }))
+);
+
+const heroCode = `# Install globally
+$ bun add -g @crafter/onpe-cli
+
+# Check API status
+$ onpe doctor
+  [OK] proceso-activo: EG2026
+  [OK] elecciones: 9 elecciones
+  [OK] resumen-general: 86664 actas
+  [OK] buscar-mesa: mesa 000001 accesible
+All checks passed
+
+# Look up any mesa
+$ onpe mesa 900001 --json
+# NDJSON output for agents
+
+# Drill down geography
+$ onpe ubigeos 2 150000
+150101  LIMA
+150102  ANCON
+...`;
+
+const heroCodeHtml = await codeToHtml(heroCode, { lang: "bash", theme: onpeTheme });
+
+const principles = [
+	"--json auto-detected when piped",
+	"NDJSON for streaming agent consumption",
+	"next-steps hints on stderr",
+	"Typed error codes with recovery hints",
+	"Sec-Fetch headers bypass nginx filter",
+	"Zero auth required (public API)",
+];
+
+const stats = [
+	{ value: "92K+", label: "Mesas" },
+	{ value: "6", label: "Commands" },
+	{ value: "0", label: "Auth required" },
+	{ value: "4", label: "Cligentic blocks" },
+];
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>onpe-cli — Agent-First Election Data CLI for Peru</title>
+		<meta name="description" content="Agent-first CLI for ONPE election results API. Query mesas, actas, ubigeos, and election summaries. Built for AI agents. Open source by Crafter Research." />
+		<meta property="og:title" content="onpe-cli — Agent-First Election Data CLI" />
+		<meta property="og:description" content="Query 92K+ mesas from ONPE's election results API. Dual JSON/human output. Built for AI agents as primary consumers." />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://onpe-cli.crafter.run" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+		<style>
+			* { margin: 0; padding: 0; box-sizing: border-box; }
+			html { scroll-behavior: smooth; }
+
+			:root {
+				--purple: #4338CA;
+				--purple-light: #6366F1;
+				--purple-dark: #312E81;
+				--purple-deep: #1E1B4B;
+				--accent: #A78BFA;
+				--bg: #FFFFFF;
+				--bg-alt: #F5F3FF;
+				--border: #E5E7EB;
+				--text: #1F2937;
+				--text-2: #6B7280;
+				--text-3: #9CA3AF;
+			}
+
+			body {
+				font-family: 'Inter', system-ui, sans-serif;
+				font-size: 15px;
+				line-height: 1.6;
+				color: var(--text);
+				background: var(--bg);
+				-webkit-font-smoothing: antialiased;
+			}
+
+			.mono { font-family: 'JetBrains Mono', monospace; }
+			.container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+			nav {
+				position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+				background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
+				border-bottom: 1px solid var(--border);
+			}
+			.nav-inner {
+				max-width: 1080px; margin: 0 auto; padding: 0 24px;
+				height: 56px; display: flex; align-items: center; justify-content: space-between;
+			}
+			.nav-brand { font-weight: 700; font-size: 15px; color: var(--purple); text-decoration: none; }
+			.nav-brand span { color: var(--accent); }
+			.nav-links { display: flex; gap: 24px; align-items: center; }
+			.nav-links a { color: var(--text-2); text-decoration: none; font-size: 13px; font-weight: 500; }
+			.nav-links a:hover { color: var(--text); }
+			.nav-cta { background: var(--purple) !important; color: white !important; padding: 6px 16px; border-radius: 6px; }
+			.nav-cta:hover { background: var(--purple-light) !important; }
+
+			.hero { padding: 120px 24px 60px; }
+			.hero-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+			.hero-badge {
+				display: inline-flex; align-items: center; gap: 6px;
+				padding: 4px 12px; background: var(--bg-alt); border: 1px solid var(--border);
+				border-radius: 999px; font-size: 12px; color: var(--text-2); margin-bottom: 20px;
+			}
+			.hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--purple); }
+			.hero h1 {
+				font-size: 40px; font-weight: 700; line-height: 1.15;
+				letter-spacing: -0.03em; color: var(--purple-dark); margin-bottom: 16px;
+			}
+			.hero h1 .accent { color: var(--purple-light); }
+			.hero-desc { font-size: 16px; color: var(--text-2); line-height: 1.7; margin-bottom: 24px; }
+			.hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+			.btn {
+				display: inline-flex; align-items: center; padding: 10px 22px;
+				border-radius: 8px; font-size: 14px; font-weight: 600;
+				text-decoration: none; border: none; cursor: pointer; transition: all 150ms;
+			}
+			.btn-primary { background: var(--purple); color: white; }
+			.btn-primary:hover { background: var(--purple-light); }
+			.btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
+			.btn-outline:hover { border-color: var(--text-2); }
+			.install-cmd { font-size: 13px; color: var(--text-3); }
+			.install-cmd code { color: var(--text); }
+
+			.hero-code {
+				border-radius: 12px; overflow: hidden;
+				box-shadow: 0 8px 32px rgba(30,27,75,0.25);
+			}
+			.hero-code :global(pre) {
+				padding: 24px !important; font-size: 12.5px !important;
+				line-height: 1.8 !important; margin: 0 !important;
+			}
+			.hero-code :global(code) { font-family: 'JetBrains Mono', monospace !important; }
+
+			.stats { padding: 40px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+			.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+			.stat { text-align: center; padding: 12px; }
+			.stat:not(:last-child) { border-right: 1px solid var(--border); }
+			.stat-value { font-size: 32px; font-weight: 700; color: var(--purple); line-height: 1; }
+			.stat-label { font-size: 11px; color: var(--text-3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+			.features { padding: 80px 24px; background: var(--bg-alt); }
+			.section-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--purple-light); margin-bottom: 8px; }
+			.section-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 40px; }
+			.features-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+			.feature-card {
+				background: white; border: 1px solid var(--border); border-radius: 12px;
+				padding: 24px; transition: border-color 200ms, box-shadow 200ms;
+			}
+			.feature-card:hover { border-color: var(--purple-light); box-shadow: 0 4px 12px rgba(99,102,241,0.08); }
+			.feature-title { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+			.feature-desc { font-size: 14px; color: var(--text-2); margin-bottom: 16px; line-height: 1.6; }
+			.feature-code { border-radius: 8px; overflow: hidden; }
+			.feature-code :global(pre) {
+				padding: 12px 16px !important; font-size: 12px !important;
+				line-height: 1.7 !important; margin: 0 !important;
+			}
+			.feature-code :global(code) { font-family: 'JetBrains Mono', monospace !important; }
+
+			.agent-dx { padding: 80px 24px; background: var(--purple-dark); color: white; }
+			.agent-dx .section-label { color: rgba(255,255,255,0.4); }
+			.agent-dx .section-title { color: white; }
+			.agent-dx-desc { color: rgba(255,255,255,0.65); max-width: 560px; font-size: 15px; line-height: 1.7; margin-bottom: 28px; }
+			.principles { display: flex; flex-wrap: wrap; gap: 8px; }
+			.principle {
+				padding: 8px 16px; border: 1px solid rgba(255,255,255,0.15);
+				border-radius: 6px; font-size: 13px; color: rgba(255,255,255,0.8);
+				background: rgba(255,255,255,0.05);
+			}
+
+			footer {
+				padding: 32px 24px; border-top: 1px solid var(--border);
+				text-align: center; font-size: 13px; color: var(--text-3);
+			}
+			footer a { color: var(--purple); text-decoration: none; }
+			footer a:hover { text-decoration: underline; }
+
+			@media (max-width: 768px) {
+				.hero-inner { grid-template-columns: 1fr; }
+				.hero h1 { font-size: 32px; }
+				.features-grid { grid-template-columns: 1fr; }
+				.stats-grid { grid-template-columns: repeat(2, 1fr); }
+				.stat:nth-child(2) { border-right: none; }
+				.stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--border); }
+				.nav-links a:not(.nav-cta) { display: none; }
+			}
+		</style>
+	</head>
+	<body>
+		<nav>
+			<div class="nav-inner">
+				<a href="/" class="nav-brand">onpe<span>/</span>cli</a>
+				<div class="nav-links">
+					<a href="#features">Features</a>
+					<a href="#agent-dx">Agent DX</a>
+					<a href="/legal">Legal</a>
+					<a href="https://github.com/crafter-research/onpe-cli" class="nav-cta">GitHub</a>
+				</div>
+			</div>
+		</nav>
+
+		<section class="hero">
+			<div class="container">
+				<div class="hero-inner">
+					<div>
+						<div class="hero-badge">
+							<span class="dot"></span>
+							<span class="mono">crafter research / civic-tech</span>
+						</div>
+						<h1>Query ONPE<br/>with <span class="accent">one CLI</span></h1>
+						<p class="hero-desc">
+							Agent-first CLI for Peru's election results API. Query mesas,
+							actas, ubigeos, and summaries. Dual JSON/human output.
+							Built for AI agents as primary consumers.
+						</p>
+						<div class="hero-actions">
+							<a href="https://github.com/crafter-research/onpe-cli" class="btn btn-primary">Get started</a>
+							<a href="#features" class="btn btn-outline">Learn more</a>
+						</div>
+						<p class="install-cmd mono">$ <code>bun add -g @crafter/onpe-cli</code></p>
+					</div>
+					<div class="hero-code" set:html={heroCodeHtml} />
+				</div>
+			</div>
+		</section>
+
+		<section class="stats">
+			<div class="container">
+				<div class="stats-grid">
+					{stats.map((s) => (
+						<div class="stat">
+							<div class="stat-value">{s.value}</div>
+							<div class="stat-label">{s.label}</div>
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<section class="features" id="features">
+			<div class="container">
+				<p class="section-label mono">Commands</p>
+				<h2 class="section-title">Election data, one command away</h2>
+				<div class="features-grid">
+					{features.map((f, i) => (
+						<div class="feature-card">
+							<h3 class="feature-title">{f.title}</h3>
+							<p class="feature-desc">{f.desc}</p>
+							<div class="feature-code" set:html={featureHtmls[i]} />
+						</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<section class="agent-dx" id="agent-dx">
+			<div class="container">
+				<p class="section-label mono">Design philosophy</p>
+				<h2 class="section-title">Agent DX first</h2>
+				<p class="agent-dx-desc">
+					Built with cligentic blocks for structured agent output.
+					NDJSON to stdout, next-step hints on stderr, typed error
+					codes with recovery suggestions. The agent is the primary consumer.
+				</p>
+				<div class="principles">
+					{principles.map((p) => (
+						<div class="principle mono">{p}</div>
+					))}
+				</div>
+			</div>
+		</section>
+
+		<footer>
+			<div class="container">
+				<a href="https://github.com/crafter-research">Crafter Research</a> — Civic Tech, Lima, Peru
+				 · <a href="/legal">Legal</a>
+			</div>
+		</footer>
+	</body>
+</html>
