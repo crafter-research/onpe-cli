@@ -123,6 +123,14 @@ export function renderResumen(resumen: ResumenGeneral): void {
 	console.log("");
 }
 
+function shortName(fullName: string): string {
+	const parts = fullName.split(" ").filter(Boolean);
+	if (parts.length <= 2) return parts.join(" ");
+	const firstName = parts[0]!;
+	const lastName = parts.length >= 4 ? parts[parts.length - 2]! : parts[parts.length - 1]!;
+	return `${firstName} ${lastName}`;
+}
+
 export function renderRanking(participantes: Participante[]): void {
 	const sorted = [...participantes].sort((a, b) => b.totalVotosValidos - a.totalVotosValidos);
 	const maxVotes = sorted[0]?.totalVotosValidos ?? 1;
@@ -145,12 +153,15 @@ export function renderRanking(participantes: Participante[]): void {
 		const colorFn = (s: string) => partyColor(p.nombreAgrupacionPolitica, s) || pc.blue(s);
 		const barStr = colorFn("=".repeat(barW)) + pc.dim(".".repeat(Math.max(0, barEmpty)));
 
-		const lastName = p.nombreCandidato.split(" ").slice(0, 2).join(" ");
+		const name = shortName(p.nombreCandidato);
+		const party = p.nombreAgrupacionPolitica.length > 20
+			? p.nombreAgrupacionPolitica.slice(0, 19) + "."
+			: p.nombreAgrupacionPolitica;
 
 		if (i < 7) {
-			console.log(`  ${pc.bold(pos)}. ${barStr} ${pc.bold(pct)} ${votes}  ${colorFn(pc.bold(lastName))} ${pc.dim(p.nombreAgrupacionPolitica)}`);
+			console.log(`  ${pc.bold(pos)}. ${barStr} ${pc.bold(pct)} ${votes}  ${colorFn(pc.bold(name))} ${pc.dim(party)}`);
 		} else {
-			console.log(`  ${pc.dim(pos)}. ${barStr} ${pc.dim(pct)} ${pc.dim(votes)}  ${colorFn(lastName)} ${pc.dim(p.nombreAgrupacionPolitica)}`);
+			console.log(`  ${pc.dim(pos)}. ${barStr} ${pc.dim(pct)} ${pc.dim(votes)}  ${colorFn(name)} ${pc.dim(party)}`);
 		}
 	}
 	console.log("");
