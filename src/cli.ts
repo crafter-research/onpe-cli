@@ -11,7 +11,7 @@ import { printBanner } from "./cli/foundation/banner";
 import { ONPE_ERRORS, ONPE_STATUS_MAP } from "./errors";
 import { renderActa, renderMesa, renderRanking, renderResumen, renderUbigeos } from "./format";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 
 const COMMANDS: [string, string][] = [
 	["ranking", "Who's winning? National candidate ranking"],

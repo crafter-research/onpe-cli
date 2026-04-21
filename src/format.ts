@@ -68,7 +68,7 @@ export function renderActa(acta: ActaDetalle): void {
 	for (const d of sorted) {
 		const pct = d.nporcentajeVotosValidos ?? 0;
 		const name = d.descripcion.length > maxName
-			? `${d.descripcion.slice(0, maxName - 1)}\u2026`
+			? `${d.descripcion.slice(0, maxName - 1)}.`
 			: d.descripcion.padEnd(maxName);
 		const coloredName = partyColor(d.descripcion, name);
 		const relBar = maxVotes > 0 ? (d.nvotos / maxVotes) * 100 : 0;
