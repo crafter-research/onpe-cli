@@ -127,7 +127,7 @@ function shortName(fullName: string): string {
 	const parts = fullName.split(" ").filter(Boolean);
 	if (parts.length <= 2) return parts.join(" ");
 	const firstName = parts[0]!;
-	const lastName = parts.length >= 4 ? parts[parts.length - 2]! : parts[parts.length - 1]!;
+	const lastName = parts.length >= 4 ? parts[2]! : parts[1]!;
 	return `${firstName} ${lastName}`;
 }
 
