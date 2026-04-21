@@ -8,7 +8,7 @@ function bar(pct: number, color: (s: string) => string): string {
 	const clamped = Math.max(0, Math.min(100, pct));
 	const filled = Math.round((clamped / 100) * BAR_WIDTH);
 	const empty = BAR_WIDTH - filled;
-	return color("#".repeat(filled)) + pc.dim("-".repeat(empty));
+	return color("=".repeat(filled)) + pc.dim(".".repeat(empty));
 }
 
 function estadoBadge(code: string, desc: string): string {
@@ -129,30 +129,28 @@ export function renderRanking(participantes: Participante[]): void {
 	const totalVotes = sorted.reduce((sum, p) => sum + p.totalVotosValidos, 0);
 
 	console.log("");
-	console.log(`  ${pc.bold("Ranking Presidencial")}  ${pc.dim(`${totalVotes.toLocaleString("es-PE")} votos validos`)}`);
+	console.log(`  ${pc.bold("Ranking Presidencial")}`);
+	console.log(`  ${pc.dim(`${totalVotes.toLocaleString("es-PE")} votos validos`)}`);
 	console.log("");
-
-	const maxNameLen = 28;
-	const maxPartyLen = 18;
 
 	for (let i = 0; i < sorted.length; i++) {
 		const p = sorted[i]!;
 		const pos = String(i + 1).padStart(2);
-		const pct = `${p.porcentajeVotosValidos.toFixed(1)}%`.padStart(6);
+		const pctNum = p.porcentajeVotosValidos;
+		const pct = `${pctNum.toFixed(1)}%`.padStart(6);
 		const votes = p.totalVotosValidos.toLocaleString("es-PE").padStart(11);
-		const relBar = (p.totalVotosValidos / maxVotes) * 100;
-		const barStr = bar(relBar, (s) => partyColor(p.nombreAgrupacionPolitica, s) || pc.blue(s));
-		const name = p.nombreCandidato.length > maxNameLen
-			? p.nombreCandidato.slice(0, maxNameLen - 1) + "."
-			: p.nombreCandidato.padEnd(maxNameLen);
-		const party = p.nombreAgrupacionPolitica.length > maxPartyLen
-			? p.nombreAgrupacionPolitica.slice(0, maxPartyLen - 1) + "."
-			: p.nombreAgrupacionPolitica;
 
-		if (i === 0) {
-			console.log(`  ${pc.bold(pos)}  ${barStr}  ${pc.bold(pct)}  ${pc.bold(votes)}  ${pc.bold(partyColor(p.nombreAgrupacionPolitica, name))}  ${pc.dim(party)}`);
+		const barW = Math.max(1, Math.round((pctNum / (sorted[0]!.porcentajeVotosValidos)) * BAR_WIDTH));
+		const barEmpty = BAR_WIDTH - barW;
+		const colorFn = (s: string) => partyColor(p.nombreAgrupacionPolitica, s) || pc.blue(s);
+		const barStr = colorFn("=".repeat(barW)) + pc.dim(".".repeat(Math.max(0, barEmpty)));
+
+		const lastName = p.nombreCandidato.split(" ").slice(0, 2).join(" ");
+
+		if (i < 7) {
+			console.log(`  ${pc.bold(pos)}. ${barStr} ${pc.bold(pct)} ${votes}  ${colorFn(pc.bold(lastName))} ${pc.dim(p.nombreAgrupacionPolitica)}`);
 		} else {
-			console.log(`  ${pc.dim(pos)}  ${barStr}  ${pct}  ${votes}  ${partyColor(p.nombreAgrupacionPolitica, name)}  ${pc.dim(party)}`);
+			console.log(`  ${pc.dim(pos)}. ${barStr} ${pc.dim(pct)} ${pc.dim(votes)}  ${colorFn(lastName)} ${pc.dim(p.nombreAgrupacionPolitica)}`);
 		}
 	}
 	console.log("");
