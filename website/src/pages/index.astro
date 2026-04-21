@@ -22,24 +22,24 @@ const onpeTheme = {
 
 const features = [
 	{
+		title: "National Ranking",
+		desc: "Who's winning? Live candidate ranking with party-colored bars, votes, and percentages.",
+		code: "$ onpe-cli ranking\n  1. ==================== 17.0% 2,695,457  Keiko Fujimori\n  2. ==============...... 12.0% 1,899,064  Roberto Sanchez\n  3. ==============...... 11.9% 1,884,279  Rafael Lopez A.\n  4. =============....... 11.1% 1,748,580  Jorge Nieto",
+	},
+	{
 		title: "Mesa Lookup",
-		desc: "Query any mesa by code. Works with regular (000001-088064) and rural centros poblados (900001-904703).",
-		code: "$ onpe-cli mesa 044739\nMesa 044739\n  Local:  IE MIGUEL GRAU SEMINARIO\n  Habiles: 300  Emitidos: 237\n  Estado: Contabilizada (C)",
+		desc: "Query any mesa by code. Regular (000001-088064) and rural centros poblados (900001-904703).",
+		code: "$ onpe-cli mesa 044739\n  Mesa 044739  [Contabilizada]\n  Local:  IE MIGUEL GRAU SEMINARIO\n  Habiles: 300  Emitidos: 237\n  Participacion: ===============..... 79.0%",
 	},
 	{
 		title: "Acta Detail",
-		desc: "Full vote breakdown per party with percentages. Includes file IDs for PDF download.",
+		desc: "Full vote breakdown per party with percentages and PDF file references.",
 		code: "$ onpe-cli acta 12345 --json | jq .detalle\n# Returns all party votes, candidates,\n# percentages, and acta file references",
 	},
 	{
-		title: "Ubigeo Navigation",
-		desc: "Drill down departments, provinces, and districts. 3 levels matching ONPE's geographic hierarchy.",
-		code: "$ onpe-cli ubigeos 1\n010000  AMAZONAS\n020000  ANCASH\n030000  APURIMAC\n...",
-	},
-	{
 		title: "Election Summary",
-		desc: "Real-time totals: actas counted, participation rate, JEE pipeline status.",
-		code: "$ onpe-cli resumen\nActas contabilizadas: 86664 (93.6%)\nTotal actas:         92767\nParticipacion:       79.2%",
+		desc: "Real-time totals: actas counted, participation rate, JEE pipeline status with progress bars.",
+		code: "$ onpe-cli resumen\n  Contabilizadas ==================== 86901 (93.7%)\n  Enviadas JEE   =............... 5757 (6.2%)\n  Total actas: 92766  Participacion: 79.2%",
 	},
 ];
 
@@ -50,21 +50,19 @@ const featureHtmls = await Promise.all(
 const heroCode = `# Install from npm
 $ bun add -g @crafter/onpe-cli
 
-# Health check (4 endpoints)
+# Who's winning?
+$ onpe-cli ranking
+  1. ==================== 17.0%  Keiko Fujimori
+  2. ==============...... 12.0%  Roberto Sanchez
+  3. ==============...... 11.9%  Rafael Lopez Aliaga
+
+# Health check
 $ onpe-cli doctor
-[OK]   proceso-activo: EG2026
-[OK]   elecciones: 9 elecciones
-[OK]   resumen-general: 86817 actas (93.6%)
-[OK]   buscar-mesa: mesa 000001 accesible
-4/4 checks passed
-
-# Agent mode: pipe for NDJSON
-$ onpe-cli mesa 900001 --json | jq .codigoMesa
-
-# Drill down geography
-$ onpe-cli ubigeos 2 150000
-150101  LIMA
-150102  ANCON`;
+  + proceso-activo   EG2026
+  + elecciones       9 elecciones
+  + resumen-general  86901 actas (93.7%)
+  + buscar-mesa      mesa 000001 accesible
+  4/4 passed`;
 
 const heroCodeHtml = await codeToHtml(heroCode, { lang: "bash", theme: onpeTheme });
 
@@ -79,9 +77,9 @@ const principles = [
 
 const stats = [
 	{ value: "92K+", label: "Mesas" },
-	{ value: "6", label: "Commands" },
+	{ value: "7", label: "Commands" },
 	{ value: "0", label: "Auth required" },
-	{ value: "6", label: "Cligentic blocks" },
+	{ value: "7", label: "Cligentic blocks" },
 ];
 ---
 
