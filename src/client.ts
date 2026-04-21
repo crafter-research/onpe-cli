@@ -95,6 +95,12 @@ export class OnpeClient {
 		return this.get<Ubigeo[]>(path);
 	}
 
+	async participantes(idEleccion: number, filtro = "eleccion", ubigeo?: string) {
+		let path = `/resumen-general/participantes?idEleccion=${idEleccion}&tipoFiltro=${filtro}`;
+		if (ubigeo) path += `&ubigeo=${ubigeo}`;
+		return this.get<Participante[]>(path);
+	}
+
 	async resultadosDepartamento(idEleccion: number, ubigeo: string) {
 		return this.get<ResultadoDepartamento>(
 			`/resumen-general/totales?idEleccion=${idEleccion}&tipoFiltro=departamento&ubigeo=${ubigeo}`,

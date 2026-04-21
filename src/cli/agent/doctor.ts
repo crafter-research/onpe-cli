@@ -56,7 +56,7 @@ export function renderDoctor(result: DoctorResult, opts: EmitOptions = {}): void
   }
 
   for (const check of result.checks) {
-    const badge = check.ok ? pc.green("\u2713") : pc.red("\u2717");
+    const badge = check.ok ? pc.green("+") : pc.red("x");
     const name = check.ok ? pc.bold(check.name) : pc.red(pc.bold(check.name));
     process.stdout.write(`  ${badge} ${name}  ${pc.dim(check.detail)}\n`);
   }

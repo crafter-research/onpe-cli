@@ -5,9 +5,10 @@ import { partyColor } from "./partidos";
 const BAR_WIDTH = 20;
 
 function bar(pct: number, color: (s: string) => string): string {
-	const filled = Math.round((pct / 100) * BAR_WIDTH);
+	const clamped = Math.max(0, Math.min(100, pct));
+	const filled = Math.round((clamped / 100) * BAR_WIDTH);
 	const empty = BAR_WIDTH - filled;
-	return color("\u2588".repeat(filled)) + pc.dim("\u2591".repeat(empty));
+	return color("#".repeat(filled)) + pc.dim("-".repeat(empty));
 }
 
 function estadoBadge(code: string, desc: string): string {
