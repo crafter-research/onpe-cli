@@ -126,31 +126,33 @@ export function renderResumen(resumen: ResumenGeneral): void {
 export function renderRanking(participantes: Participante[]): void {
 	const sorted = [...participantes].sort((a, b) => b.totalVotosValidos - a.totalVotosValidos);
 	const maxVotes = sorted[0]?.totalVotosValidos ?? 1;
+	const totalVotes = sorted.reduce((sum, p) => sum + p.totalVotosValidos, 0);
 
 	console.log("");
-	console.log(`  ${pc.bold("Ranking Presidencial")}`);
+	console.log(`  ${pc.bold("Ranking Presidencial")}  ${pc.dim(`${totalVotes.toLocaleString("es-PE")} votos validos`)}`);
 	console.log("");
+
+	const maxNameLen = 28;
+	const maxPartyLen = 18;
 
 	for (let i = 0; i < sorted.length; i++) {
 		const p = sorted[i]!;
 		const pos = String(i + 1).padStart(2);
-		const pct = p.porcentajeVotosValidos.toFixed(2);
-		const votes = p.totalVotosValidos.toLocaleString("es-PE");
+		const pct = `${p.porcentajeVotosValidos.toFixed(1)}%`.padStart(6);
+		const votes = p.totalVotosValidos.toLocaleString("es-PE").padStart(11);
 		const relBar = (p.totalVotosValidos / maxVotes) * 100;
 		const barStr = bar(relBar, (s) => partyColor(p.nombreAgrupacionPolitica, s) || pc.blue(s));
-		const name = p.nombreCandidato.length > 30
-			? p.nombreCandidato.slice(0, 29) + "."
-			: p.nombreCandidato;
-		const party = p.nombreAgrupacionPolitica.length > 20
-			? p.nombreAgrupacionPolitica.slice(0, 19) + "."
+		const name = p.nombreCandidato.length > maxNameLen
+			? p.nombreCandidato.slice(0, maxNameLen - 1) + "."
+			: p.nombreCandidato.padEnd(maxNameLen);
+		const party = p.nombreAgrupacionPolitica.length > maxPartyLen
+			? p.nombreAgrupacionPolitica.slice(0, maxPartyLen - 1) + "."
 			: p.nombreAgrupacionPolitica;
 
 		if (i === 0) {
-			console.log(`  ${pc.bold(pos)}. ${pc.bold(partyColor(p.nombreAgrupacionPolitica, name))}  ${pc.dim(party)}`);
-			console.log(`      ${barStr}  ${pc.bold(votes)}  ${pc.bold(`${pct}%`)}`);
+			console.log(`  ${pc.bold(pos)}  ${barStr}  ${pc.bold(pct)}  ${pc.bold(votes)}  ${pc.bold(partyColor(p.nombreAgrupacionPolitica, name))}  ${pc.dim(party)}`);
 		} else {
-			console.log(`  ${pc.dim(pos)}. ${partyColor(p.nombreAgrupacionPolitica, name)}  ${pc.dim(party)}`);
-			console.log(`      ${barStr}  ${votes}  ${pc.dim(`${pct}%`)}`);
+			console.log(`  ${pc.dim(pos)}  ${barStr}  ${pct}  ${votes}  ${partyColor(p.nombreAgrupacionPolitica, name)}  ${pc.dim(party)}`);
 		}
 	}
 	console.log("");
