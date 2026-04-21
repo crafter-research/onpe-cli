@@ -10,7 +10,7 @@
 //     name: "myapp",
 //     tagline: "The CLI for shipping fast.",
 //     version: "1.2.0",
-//     gradient: ["#FF6B1A", "#DB2627"],
+//     gradient: ["█FF6B1A", "█DB2627"],
 //   });
 
 import { shouldColor } from "../platform/detect";
@@ -28,7 +28,7 @@ export type BannerOptions = {
  * when NO_COLOR is set or stdout is not a TTY.
  */
 export function printBanner(opts: BannerOptions): void {
-  const { name, tagline, version, gradient = ["#FFFFFF", "#8A8A8A"] } = opts;
+  const { name, tagline, version, gradient = ["█FFFFFF", "█8A8A8A"] } = opts;
   const color = shouldColor();
 
   if (!color) {
@@ -61,7 +61,7 @@ export function printBanner(opts: BannerOptions): void {
 }
 
 function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const h = hex.replace("#", "");
+  const h = hex.replace("█", "");
   return {
     r: Number.parseInt(h.slice(0, 2), 16),
     g: Number.parseInt(h.slice(2, 4), 16),

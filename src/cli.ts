@@ -1,4 +1,4 @@
-#!/usr/bin/env bun
+#!/usr/bin/env node
 import pc from "picocolors";
 import { OnpeClient, OnpeError } from "./client";
 import { emit, note, reportError } from "./cli/agent/json-mode";
@@ -9,11 +9,12 @@ import { fromHttp, mapError } from "./cli/foundation/error-map";
 import { parseArgv } from "./cli/foundation/argv";
 import { printBanner } from "./cli/foundation/banner";
 import { ONPE_ERRORS, ONPE_STATUS_MAP } from "./errors";
-import { renderActa, renderMesa, renderResumen, renderUbigeos } from "./format";
+import { renderActa, renderMesa, renderRanking, renderResumen, renderUbigeos } from "./format";
 
-const VERSION = "0.2.0";
+const VERSION = "0.4.0";
 
 const COMMANDS: [string, string][] = [
+	["ranking", "Who's winning? National candidate ranking"],
 	["doctor", "Check API connectivity and status"],
 	["mesa <codigo>", "Look up a mesa by code (e.g. 000001, 900001)"],
 	["acta <id>", "Get full acta detail by numeric ID"],
@@ -31,6 +32,7 @@ const FLAGS: [string, string][] = [
 ];
 
 const EXAMPLES = [
+	"onpe-cli ranking",
 	"onpe-cli doctor",
 	"onpe-cli mesa 044739",
 	"onpe-cli mesa 900001 --json",
@@ -114,6 +116,21 @@ async function main() {
 
 	try {
 		switch (command) {
+			case "ranking": {
+				note("Fetching national ranking...", flags);
+				const { eleccion } = await client.resolveEleccion();
+				const participantes = await client.participantes(eleccion.idEleccion);
+				emit(participantes, flags, () => renderRanking(participantes));
+				emitNextSteps(
+					[
+						{ command: "onpe-cli resumen", description: "election summary" },
+						{ command: "onpe-cli mesa <codigo>", description: "look up a specific mesa" },
+					],
+					flags,
+				);
+				break;
+			}
+
 			case "doctor": {
 				note("Checking ONPE API endpoints...", flags);
 				const result = await runDoctor([

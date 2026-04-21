@@ -245,3 +245,13 @@ export interface ResultadoDepartamento {
 	fechaActualizacion: string;
 }
 
+export interface Participante {
+	nombreAgrupacionPolitica: string;
+	codigoAgrupacionPolitica: number;
+	nombreCandidato: string;
+	dniCandidato: string;
+	totalVotosValidos: number;
+	porcentajeVotosValidos: number;
+	porcentajeVotosEmitidos: number;
+}
+

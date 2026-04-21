@@ -1,5 +1,5 @@
 import pc from "picocolors";
-import type { ActaDetalle, MesaSearch, ResumenGeneral, Ubigeo } from "./client";
+import type { ActaDetalle, MesaSearch, Participante, ResumenGeneral, Ubigeo } from "./client";
 import { partyColor } from "./partidos";
 
 const BAR_WIDTH = 20;
@@ -120,6 +120,39 @@ export function renderResumen(resumen: ResumenGeneral): void {
 	console.log(`  ${pc.dim("Total actas")}     ${pc.bold(String(resumen.totalActas))}`);
 	console.log(`  ${pc.dim("Participacion")}   ${pc.bold(`${resumen.participacionCiudadana.toFixed(1)}%`)}`);
 	console.log(`  ${pc.dim("Actualizado")}     ${pc.dim(resumen.fechaActualizacion)}`);
+	console.log("");
+}
+
+export function renderRanking(participantes: Participante[]): void {
+	const sorted = [...participantes].sort((a, b) => b.totalVotosValidos - a.totalVotosValidos);
+	const maxVotes = sorted[0]?.totalVotosValidos ?? 1;
+
+	console.log("");
+	console.log(`  ${pc.bold("Ranking Presidencial")}`);
+	console.log("");
+
+	for (let i = 0; i < sorted.length; i++) {
+		const p = sorted[i]!;
+		const pos = String(i + 1).padStart(2);
+		const pct = p.porcentajeVotosValidos.toFixed(2);
+		const votes = p.totalVotosValidos.toLocaleString("es-PE");
+		const relBar = (p.totalVotosValidos / maxVotes) * 100;
+		const barStr = bar(relBar, (s) => partyColor(p.nombreAgrupacionPolitica, s) || pc.blue(s));
+		const name = p.nombreCandidato.length > 30
+			? p.nombreCandidato.slice(0, 29) + "."
+			: p.nombreCandidato;
+		const party = p.nombreAgrupacionPolitica.length > 20
+			? p.nombreAgrupacionPolitica.slice(0, 19) + "."
+			: p.nombreAgrupacionPolitica;
+
+		if (i === 0) {
+			console.log(`  ${pc.bold(pos)}. ${pc.bold(partyColor(p.nombreAgrupacionPolitica, name))}  ${pc.dim(party)}`);
+			console.log(`      ${barStr}  ${pc.bold(votes)}  ${pc.bold(`${pct}%`)}`);
+		} else {
+			console.log(`  ${pc.dim(pos)}. ${partyColor(p.nombreAgrupacionPolitica, name)}  ${pc.dim(party)}`);
+			console.log(`      ${barStr}  ${votes}  ${pc.dim(`${pct}%`)}`);
+		}
+	}
 	console.log("");
 }
 
